@@ -19,8 +19,14 @@ public class Launcher {
     // Get authorization code
     String authorizationCode = tokenManager.getAuthorizationCode();
     // Supply authorization code to get Access and Refresh Token
-    Map<String, String> tokens = tokenManager.getTokens(authorizationCode);
-    System.out.println(tokens.get("accessToken"));
-    System.out.println(tokens.get("refreshToken"));
+    Map<String, String> tokens =
+        tokenManager.getTokens(authorizationCode, TokenManager.GRANT_TYPE_AUTHORIZATION_CODE);
+    String accessToken = tokens.get("accessToken");
+    String refreshToken = tokens.get("refreshToken");
+    // Supply Refresh Token to refresh Access Token
+    Map<String, String> refreshedTokens =
+        tokenManager.getTokens(refreshToken, TokenManager.GRANT_TYPE_REFRESH_TOKEN);
+    String newAccessToken = refreshedTokens.get("accessToken");
+    String newRefreshToken = refreshedTokens.get("refreshToken");
   }
 }

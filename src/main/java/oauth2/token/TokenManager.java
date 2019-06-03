@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import oauth2.token.server.CallbackServer;
@@ -23,8 +24,9 @@ public class TokenManager {
   private String authorizationURLString;
   private String tokenURLString;
   private final String responseType = "code";
-  private final String grantType = "authorization_code";
   private final String callbackServerURI = "http://localhost:8080";
+  public static final String GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code";
+  public static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
 
   public TokenManager(
       String clientId,
@@ -39,13 +41,19 @@ public class TokenManager {
     this.tokenURLString = tokenURLString;
   }
 
-  public Map<String, String> getTokens(String authorizationCode) throws Exception {
+  public Map<String, String> getTokens(String authorizationCode, String grantType)
+      throws Exception {
     Map<String, String> formData = new HashMap<String, String>();
     formData.put("client_id", clientId);
     formData.put("client_secret", clientSecret);
-    formData.put("grant_type", grantType);
-    formData.put("code", authorizationCode);
     formData.put("redirect_uri", callbackServerURI);
+    if (grantType.equals(GRANT_TYPE_AUTHORIZATION_CODE)) {
+      formData.put("code", authorizationCode);
+      formData.put("grant_type", "authorization_code");
+    } else if (grantType.equals(GRANT_TYPE_REFRESH_TOKEN)) {
+      formData.put("refresh_token", authorizationCode);
+      formData.put("grant_type", "refresh_token");
+    }
 
     OkHttpClient okHttpClient = new OkHttpClient();
     RequestBody tokenRequestBody =
@@ -55,8 +63,15 @@ public class TokenManager {
     Response tokenResponse = okHttpClient.newCall(tokenRequest).execute();
     JSONObject tokenResponseJSON = new JSONObject(tokenResponse.body().string());
     Map<String, String> tokens = new HashMap<String, String>();
-    tokens.put("accessToken", tokenResponseJSON.getString("access_token"));
-    tokens.put("refreshToken", tokenResponseJSON.getString("refresh_token"));
+    String accessToken = tokenResponseJSON.getString("access_token");
+    String refreshToken;
+    try {
+      refreshToken = tokenResponseJSON.getString("refresh_token");
+    } catch (JSONException e) {
+      refreshToken = authorizationCode;
+    }
+    tokens.put("accessToken", accessToken);
+    tokens.put("refreshToken", refreshToken);
     return tokens;
   }
 
