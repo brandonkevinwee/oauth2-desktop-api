@@ -1,6 +1,6 @@
 # OAuth2 Token Extractor for Desktop Applications
 
-Easy to use OAuth2 Token Extractor for desktop applications.
+Easy to use OAuth2 Token Extractor for desktop applications. Tested with Spotify.
 
 Notes:
 1. Allow http://localhost:8080 in your Application dashboard's Redirect URL
